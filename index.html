@@ -3,7 +3,7 @@
 <head>
 <meta charset='UTF-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-<title>AquaTube — Multi-Mode Viewer</title>
+<title>mikuOS</title>
 <link rel='preconnect' href='https://fonts.googleapis.com'>
 <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
 <link href='https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Exo+2:wght@400;600;700;800;900&family=VT323&display=swap' rel='stylesheet'>
@@ -134,9 +134,7 @@ body[data-mode='aero'] .scene-aero,body[data-mode='webcorexp'] .scene-xp,body[da
 .app{position:relative;z-index:10;min-height:100vh;padding:14px clamp(12px,3vw,34px) 40px;display:flex;flex-direction:column}
 .header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 0}
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-.logo-title{font-family:'Exo 2',sans-serif;font-size:clamp(1.6rem,4vw,2.45rem);font-weight:900;line-height:1;letter-spacing:-.03em;background:linear-gradient(135deg,var(--logoA) 0%,var(--logoB) 18%,var(--logoC) 52%,var(--logoD) 80%,var(--logoA) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;filter:drop-shadow(0 2px 14px rgba(255,255,255,.18));animation:shine 4s linear infinite}
-.logo-sub{font-family:'VT323',monospace;font-size:.88rem;color:var(--accent2);letter-spacing:.18em;text-transform:uppercase;text-shadow:0 0 10px var(--accent2)}
-@keyframes shine{0%{background-position:0%}100%{background-position:200%}}
+.logo-title{font-family:'Exo 2',sans-serif;font-size:clamp(1.6rem,4vw,2.45rem);font-weight:900;line-height:1;letter-spacing:-.03em;background:linear-gradient(135deg,var(--logoA) 0%,var(--logoB) 18%,var(--logoC) 52%,var(--logoD) 80%,var(--logoA) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200%;filter:drop-shadow(0 2px 14px rgba(255,255,255,.18));animation:shine 4s linear infinite}@keyframes shine{0%{background-position:0%}100%{background-position:200%}}
 .widgets{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .badge{display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.32);border:1.5px solid var(--border);border-radius:10px;padding:6px 10px;font-family:'VT323',monospace;font-size:.84rem;color:var(--accent1);letter-spacing:.08em;text-shadow:0 0 8px var(--accent1);box-shadow:0 0 12px rgba(255,255,255,.05),inset 0 1px 0 rgba(255,255,255,.06)}
 .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);box-shadow:0 0 10px var(--accent2);animation:pulse 1.5s ease-in-out infinite}@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.72);opacity:.6}}
@@ -275,7 +273,6 @@ body[data-mode='glossypink'] .r1{--r:8deg}body[data-mode='glossypink'] .r2{--r:-
   /* logo */
   .logo-icon{width:46px;height:46px}
   .logo-title{font-size:clamp(1.35rem,7vw,1.9rem)}
-  .logo-sub{font-size:.78rem;letter-spacing:.12em}
   /* URL row */
   .row{flex-direction:column;gap:8px}
   .btn{padding:13px 20px;width:100%;justify-content:center}
@@ -303,7 +300,6 @@ body[data-mode='glossypink'] .r1{--r:8deg}body[data-mode='glossypink'] .r2{--r:-
   .logo{gap:9px}
   .logo-icon{width:40px;height:40px}
   .logo-title{font-size:clamp(1.2rem,8vw,1.6rem)}
-  .logo-sub{font-size:.7rem;letter-spacing:.1em}
   .badge,.mode-btn{padding:5px 8px;font-size:.8rem}
   .panel{padding:14px 14px;border-radius:18px}
   .label{font-size:.9rem}
@@ -584,7 +580,7 @@ body[data-mode='glossypink'] .r1{--r:8deg}body[data-mode='glossypink'] .r2{--r:-
       <div class='logo-icon' id='logo-icon'>
         <div class='logo-ring'></div><div class='logo-shell'></div><div class='logo-core'></div><div class='logo-lens'></div><div class='logo-pupil'></div><div class='logo-spec'></div><div class='logo-spark s1'></div><div class='logo-spark s2'></div>
       </div>
-      <div><div class='logo-title'>AquaTube</div><div class='logo-sub' id='logo-sub'>:: frutiger aero aquarium viewer ::</div></div>
+      <div><div class='logo-title'>mikuOS</div></div>
     </a>
     <div class='widgets'>
       <div class='badge'><span class='dot'></span>ONLINE</div>
@@ -618,7 +614,7 @@ body[data-mode='glossypink'] .r1{--r:8deg}body[data-mode='glossypink'] .r2{--r:-
   <div class='y2k-loader'>
     <div class='y2k-window'>
       <div class='y2k-titlebar'>
-        <span class='ttl'>▶ AquaTube Player v1.0</span>
+        <span class='ttl'>▶ mikuOS Player v1.0</span>
         <div class='btns'><span></span><span></span><span></span></div>
       </div>
       <div class='y2k-body'>
@@ -840,7 +836,7 @@ modeBtn.addEventListener('click',e=>{e.stopPropagation();modeDrop.classList.togg
   modeIconEl.textContent=MODES[m].icon;
   modeLabelEl.textContent=MODES[m].label;
   modeStatVal.textContent=MODES[m].label;
-  logoSub.textContent=MODES[m].sub;
+  if(logoSub) logoSub.textContent=MODES[m].sub;
   modeDrop.classList.remove('open');
   modeBtn.classList.remove('open');
   initFish();
