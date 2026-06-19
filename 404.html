@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>mikuOS · 404</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;900&family=VT323&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;overflow:hidden;background:#000c1a;color:#e8fbff;font-family:'VT323',monospace;display:flex;align-items:center;justify-content:center;}
+
+/* grid floor */
+#grid{
+  position:fixed;bottom:0;left:-10%;right:-10%;height:50vh;z-index:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,232,255,.15) 0 1.5px,transparent 1.5px 60px),
+    repeating-linear-gradient(180deg,rgba(0,232,255,.15) 0 1.5px,transparent 1.5px 50px);
+  transform:perspective(500px) rotateX(70deg);
+  transform-origin:bottom;
+  mask-image:linear-gradient(180deg,transparent,rgba(0,0,0,.5) 35%,black 100%);
+  -webkit-mask-image:linear-gradient(180deg,transparent,rgba(0,0,0,.5) 35%,black 100%);
+}
+
+/* scanlines */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,0) 0px,rgba(255,255,255,0) 3px,rgba(255,255,255,.015) 3px,rgba(255,255,255,.015) 4px);
+}
+
+/* logo */
+.logo{position:fixed;top:16px;left:16px;z-index:20;display:flex;align-items:center;gap:9px;text-decoration:none;}
+.logo-icon{width:38px;height:38px;border-radius:50%;position:relative;}
+.logo-shell,.logo-core,.logo-ring,.logo-lens,.logo-pupil,.logo-spec{position:absolute;inset:0;border-radius:50%;}
+.logo-shell{background:radial-gradient(circle at 32% 24%,rgba(255,255,255,.98) 0%,rgba(255,255,255,.62) 18%,rgba(255,255,255,.10) 42%,rgba(255,255,255,.05) 100%);box-shadow:inset 0 1px 1px rgba(255,255,255,.8),0 0 0 1px rgba(255,255,255,.2);}
+.logo-core{inset:4px;background:radial-gradient(circle at 34% 28%,#fff 0%,#a8e8ff 18%,#00e8ff 44%,#007dcb 72%,rgba(0,0,0,.16) 100%);box-shadow:0 0 18px rgba(0,232,255,.5);}
+.logo-ring{inset:-3px;background:conic-gradient(from 0deg,rgba(255,255,255,0),rgba(255,255,255,.4),rgba(255,255,255,0),rgba(255,255,255,.22),rgba(255,255,255,0));filter:blur(5px);animation:spin 7s linear infinite;}
+.logo-lens{inset:10px 16px;border-radius:46% 54% 50% 50%/58% 40% 60% 42%;background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(255,255,255,.1) 55%,rgba(0,0,0,.06) 100%);transform:rotate(-7deg);}
+.logo-pupil{inset:15px 20px;border-radius:999px;background:linear-gradient(180deg,rgba(123,69,255,.88),rgba(0,242,255,.76));}
+.logo-spec{inset:auto;width:20px;height:11px;left:9px;top:8px;background:rgba(255,255,255,.88);border-radius:50%;filter:blur(3px);transform:rotate(-24deg);}
+.logo-name{font-family:'Exo 2',sans-serif;font-size:1.35rem;font-weight:900;background:linear-gradient(135deg,#fff 0%,#a8e8ff 40%,#00e8ff 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* content */
+#content{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:20px;}
+
+.num{
+  font-family:'Exo 2',sans-serif;font-size:clamp(5rem,18vw,11rem);font-weight:900;line-height:1;letter-spacing:-.04em;
+  background:linear-gradient(180deg,#00e8ff 0%,#007dcb 60%,rgba(0,80,140,.3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(0,232,255,.35));
+  animation:glitch 5s ease-in-out infinite;
+  position:relative;
+}
+.num::before,.num::after{content:'404';position:absolute;inset:0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.num::before{background:linear-gradient(180deg,#ff2a6d,#ff2a6d);animation:glA 5s ease-in-out infinite;clip-path:polygon(0 25%,100% 25%,100% 42%,0 42%);}
+.num::after{background:linear-gradient(180deg,#00e8ff,#00e8ff);animation:glB 5s ease-in-out infinite;clip-path:polygon(0 58%,100% 58%,100% 72%,0 72%);}
+@keyframes glitch{0%,88%,100%{transform:translate(0)}90%{transform:translate(-3px,2px)}92%{transform:translate(3px,-2px)}94%{transform:translate(-1px,0)}}
+@keyframes glA{0%,88%,100%{opacity:0;transform:translate(0)}90%{opacity:.7;transform:translate(5px,0)}92%{opacity:.4;transform:translate(-3px,0)}94%{opacity:0}}
+@keyframes glB{0%,88%,100%{opacity:0;transform:translate(0)}91%{opacity:.6;transform:translate(-5px,0)}93%{opacity:.3;transform:translate(3px,0)}95%{opacity:0}}
+
+/* miku */
+#miku-wrap{position:relative;margin:4px 0;}
+#miku{
+  width:140px;image-rendering:pixelated;
+  animation:mikuFloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 8px 24px rgba(0,200,220,.35));
+}
+/* speech bubble */
+#bubble{
+  position:absolute;top:-54px;left:50%;transform:translateX(-50%);
+  background:rgba(0,20,48,.82);border:1.5px solid rgba(0,232,255,.4);
+  border-radius:12px;padding:7px 14px;
+  font-family:'VT323',monospace;font-size:1.05rem;color:#a8e8ff;letter-spacing:.06em;
+  white-space:nowrap;
+  backdrop-filter:blur(8px);
+}
+#bubble::after{
+  content:'';position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:rgba(0,232,255,.4);
+}
+@keyframes mikuFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.sub{font-size:1.1rem;color:rgba(168,232,255,.45);letter-spacing:.12em;margin-top:2px;}
+
+.back{
+  margin-top:12px;
+  display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,#00e8cc,#00b4e8 45%,#0066cc);
+  border:none;border-radius:12px;padding:11px 28px;
+  font-family:'Exo 2',sans-serif;font-size:.85rem;font-weight:900;color:#fff;
+  letter-spacing:.06em;text-transform:uppercase;text-decoration:none;
+  box-shadow:0 6px 20px rgba(0,180,230,.4),inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .18s,box-shadow .18s;
+}
+.back:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,200,255,.5),inset 0 1px 0 rgba(255,255,255,.3);}
+
+/* stars */
+#stars{position:fixed;inset:0;z-index:0;pointer-events:none;}
+</style>
+</head>
+<body>
+
+<a class="logo" href="index.html">
+  <div class="logo-icon">
+    <div class="logo-ring"></div><div class="logo-shell"></div><div class="logo-core"></div>
+    <div class="logo-lens"></div><div class="logo-pupil"></div><div class="logo-spec"></div>
+  </div>
+  <span class="logo-name">mikuOS</span>
+</a>
+
+<canvas id="stars"></canvas>
+<div id="grid"></div>
+
+<div id="content">
+  <div class="num">404</div>
+
+  <div id="miku-wrap">
+    <div id="bubble">i looked everywhere... 🌊</div>
+    <img id="miku" src="ddelv9e-90c5d8f6-234f-4d81-b6fd-cf65ba2a13ce.jpg" alt="pixel miku">
+  </div>
+
+  <div class="sub">THIS PAGE DRIFTED INTO THE VOID</div>
+  <a class="back" href="index.html">↩ BACK TO HYPERSPACE</a>
+</div>
+
+<script>
+const c = document.getElementById('stars'), x = c.getContext('2d');
+function resize(){ c.width=innerWidth; c.height=innerHeight; }
+resize(); window.addEventListener('resize',resize);
+const stars = Array.from({length:160},()=>({
+  px:Math.random()*innerWidth, py:Math.random()*innerHeight,
+  r:Math.random()*1.3+.2, speed:Math.random()*.25+.04,
+  phase:Math.random()*Math.PI*2,
+  col:['#00e8ff','#ffffff','#a8e8ff','#ffe866','#ff9cff'][Math.floor(Math.random()*5)]
+}));
+(function draw(){
+  x.clearRect(0,0,c.width,c.height);
+  const t=performance.now()/1000;
+  stars.forEach(s=>{
+    x.beginPath(); x.arc(s.px,s.py,s.r,0,Math.PI*2);
+    x.fillStyle=s.col; x.globalAlpha=.3+.7*Math.abs(Math.sin(s.phase+t*s.speed*2));
+    x.fill();
+  });
+  x.globalAlpha=1; requestAnimationFrame(draw);
+})();
+
+// rotate bubble messages
+const msgs = [
+  'i looked everywhere... 🌊',
+  'are you lost? 💙',
+  'this sector is empty 🌌',
+  'page.exe not found 💾',
+  'miku was here tho ✨'
+];
+let mi = 0;
+setInterval(()=>{ mi=(mi+1)%msgs.length; document.getElementById('bubble').textContent=msgs[mi]; },3000);
+</script>
+</body>
+</html>
