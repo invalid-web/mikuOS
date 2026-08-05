@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HaiFry Menu — Flashcards</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.4.2/pixi.min.js"></script>
+<style>
+:root{
+  --bg:#ffeaf4;
+  --bg2:#ffd3e6;
+  --pink:#ff6fa8;
+  --pink-dark:#e0558f;
+  --lavender:#c9a0f5;
+  --mint:#8fe3c8;
+  --peach:#ffc9a8;
+  --cream:#fff6fa;
+  --text:#7a3b5e;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:radial-gradient(ellipse at top, var(--bg2), var(--bg) 70%);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--text);overflow:hidden;}
+#app-root{display:flex;flex-direction:column;align-items:center;height:100%;width:100%;padding:10px 0 0 0;}
+header{text-align:center;margin-bottom:4px;flex-shrink:0;}
+header h1{margin:0;font-size:1.5rem;letter-spacing:1px;color:var(--pink-dark);text-shadow:0 2px 8px rgba(255,111,168,.35);}
+header p{margin:2px 0 0 0;font-size:.8rem;color:#b579a0;}
+#canvas-wrap{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0;}
+canvas{display:block;}
+#hint{font-size:.72rem;color:#c98aab;margin-top:2px;flex-shrink:0;padding-bottom:6px;}
+#loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--pink-dark);font-size:1rem;z-index:10;}
+</style>
+</head>
+<body>
+<div id="loading">Preparing the menu… 🌸</div>
+<div id="app-root">
+  <header>
+    <h1>🎀 Flashcards: Learn the Menu 🎀</h1>
+    <p>You got this!</p>
+  </header>
+  <div id="canvas-wrap"></div>
+  <div id="hint">Click the card to flip · Space = flip · ← → = navigate · 1-4 = answer in Quiz mode</div>
+</div>
+<script>
+/* ---------------------------------------------------------------
+   DATA: terms pulled from the menu that an English speaker would
+   not natively know, with short quiz answers + full defs.
+---------------------------------------------------------------- */
+const CARDS = [
+{term:'Shiso',kana:'',cat:'Ingredient',short:'Minty-basil herb garnish',meaning:'A fragrant Japanese herb (perilla leaf) with a minty, basil-like flavor, used as a garnish or wrap.',context:'Kimchi Fried Rice, Cheese Shiso Spring Rolls, Cherry Tomato Caprese, Tarako Fried Rice'},
+{term:'Kewpie',kana:'',cat:'Ingredient',short:'Rich Japanese mayo brand',meaning:'A popular Japanese mayonnaise brand made with rice vinegar and egg yolks, prized for its rich, umami tang.',context:'Fried Oysters, Katsu items, Curry Fried Rice, Okonomiyaki dishes'},
+{term:'Tonkatsu',kana:'',cat:'DishStyle',short:'Breaded fried pork cutlet',meaning:'A breaded, deep-fried pork cutlet — one of Japan\'s most popular comfort foods.',context:'Tonkatsu, Tonkatsu Curry, Tonkatsu Bento, Katsudon'},
+{term:'Panko',kana:'',cat:'Ingredient',short:'Light, crispy breadcrumbs',meaning:'Coarse, airy Japanese-style breadcrumbs that fry up extra light and crunchy.',context:'Fried Oysters, Katsu Salad, Chicken Katsu, Tonkatsu'},
+{term:'Yakisoba',kana:'',cat:'DishStyle',short:'Stir-fried wheat noodles',meaning:'Japanese stir-fried wheat noodles, tossed with vegetables and a savory-sweet sauce.',context:'Phoebe\'s Fried Chicken Yakisoba, Yakisoba, Soba Meshi, Modanyaki'},
+{term:'Katsu',kana:'',cat:'DishStyle',short:'Breaded, deep-fried cutlet',meaning:'Short for cutlet — any meat, seafood, or vegetable that\'s breaded and deep-fried.',context:'Chicken Katsu, Katsu Salad, Katsudon, Kushikatsu'},
+{term:'Gyoza',kana:'',cat:'DishStyle',short:'Pan-fried dumplings',meaning:'Pan-fried dumplings filled with meat and vegetables, crisped on the bottom and steamed on top.',context:'Pork Gyoza'},
+{term:'Ponzu',kana:'',cat:'Sauce',short:'Citrusy soy dipping sauce',meaning:'A tangy citrus-based soy sauce used as a dipping sauce or dressing.',context:'Pork Gyoza, Mayopon (mayo + ponzu)'},
+{term:'Agedashi',kana:'',cat:'DishStyle',short:'Lightly fried, served in broth',meaning:'A preparation where food is lightly fried, then served in a savory dashi-based broth.',context:'Agedashi Tofu'},
+{term:'Tsuyu',kana:'',cat:'Sauce',short:'Dashi-based dipping broth',meaning:'A savory dashi-based broth used for dipping or as a light soup base.',context:'Agedashi Tofu'},
+{term:'Daikon',kana:'',cat:'Ingredient',short:'Japanese white radish',meaning:'A large, mild-flavored Japanese white radish, often grated or shredded as a garnish.',context:'Agedashi Tofu (shredded daikon topping)'},
+{term:'Gomaae',kana:'',cat:'DishStyle',short:'Veggies in sesame sauce',meaning:'A preparation of vegetables dressed in a sweetened, ground-sesame sauce.',context:'Asparagus Gomaae'},
+{term:'Konnyaku',kana:'',cat:'Ingredient',short:'Firm jelly-like yam cake',meaning:'A firm, jelly-like food made from the konjac yam, nearly calorie-free and prized for its chewy texture.',context:'Doteyaki'},
+{term:'Shichimi',kana:'',cat:'Ingredient',short:'7-spice chili blend',meaning:'Shichimi togarashi — a Japanese seven-spice blend built around chili pepper, used as a finishing seasoning.',context:'Doteyaki, Eggplant Nibitashi, Kinpira Celery, Yakitori'},
+{term:'Nibitashi',kana:'',cat:'DishStyle',short:'Simmered in seasoned dashi',meaning:'A cooking style where vegetables are simmered or marinated in a lightly seasoned dashi broth.',context:'Eggplant Nibitashi'},
+{term:'Yamaimo',kana:'',cat:'Ingredient',short:'Sticky mountain yam',meaning:'Japanese mountain yam — sticky and crunchy, edible raw or cooked.',context:'Grilled Yamaimo, Yamaimo Tanzaku'},
+{term:'Yuzu Kosho',kana:'',cat:'Sauce',short:'Citrus-chili fermented paste',meaning:'A fermented paste of yuzu citrus peel, chili pepper, and salt — bright, hot, and aromatic.',context:'Yamaimo Tanzaku'},
+{term:'Kinpira',kana:'',cat:'DishStyle',short:'Sweet-soy stir-fry simmer',meaning:'A cooking method of stir-frying then simmering root vegetables in a sweet soy seasoning.',context:'Kinpira Celery'},
+{term:'Doteyaki',kana:'',cat:'DishStyle',short:'Miso-simmered beef tendon',meaning:'Beef tendon and konnyaku slow-simmered, traditionally in a miso-based broth, until tender.',context:'Doteyaki'},
+{term:'Otsumami',kana:'',cat:'Format',short:'Small plates for drinking',meaning:'Small snack dishes meant to be shared and enjoyed alongside drinks, like Japanese tapas.',context:'Menu section: Otsumami / Small Plates / Shareables'},
+{term:'Donburi',kana:'',cat:'Format',short:'Rice bowl dish',meaning:'A Japanese bowl dish: steamed rice topped with meat, seafood, or vegetables.',context:'Teriyaki Donburi, Katsudon'},
+{term:'Katsudon',kana:'',cat:'DishStyle',short:'Cutlet & egg rice bowl',meaning:'A donburi topped with a fried cutlet and egg simmered in a savory sauce over rice.',context:'Katsudon'},
+{term:'Okonomiyaki',kana:'',cat:'DishStyle',short:'Savory grilled pancake',meaning:'A savory grilled pancake whose name literally means "grilled as you like it."',context:'The Osaka, Butatama, Negiyaki, Modanyaki, Tofuyaki'},
+{term:'Benishoga',kana:'',cat:'Ingredient',short:'Red pickled ginger',meaning:'Bright red, thinly sliced pickled ginger used as a tangy garnish.',context:'Okonomiyaki dishes, Yakisoba'},
+{term:'Tenkasu',kana:'',cat:'Ingredient',short:'Crispy tempura bits',meaning:'Small crunchy bits of leftover deep-fried tempura batter, added for texture.',context:'Okonomiyaki batter'},
+{term:'Aonori',kana:'',cat:'Ingredient',short:'Dried green seaweed flakes',meaning:'Dried, flaked green seaweed sprinkled on top as a savory, ocean-flavored garnish.',context:'Okonomiyaki dishes, Yakisoba'},
+{term:'Katsuobushi',kana:'',cat:'Ingredient',short:'Dried bonito flakes',meaning:'Paper-thin shavings of dried, smoked, fermented bonito fish — they "dance" from rising heat.',context:'Okonomiyaki dishes, Yakisoba'},
+{term:'Modanyaki',kana:'',cat:'DishStyle',short:'Okonomiyaki + noodle layer',meaning:'An okonomiyaki variation layered with fried yakisoba noodles — name likely from "modern."',context:'Modanyaki'},
+{term:'Negiyaki',kana:'',cat:'DishStyle',short:'Okonomiyaki loaded with onion',meaning:'A thinner okonomiyaki variation packed with green onions instead of cabbage.',context:'Negiyaki'},
+{term:'Butatama',kana:'',cat:'DishStyle',short:'Pork & egg okonomiyaki',meaning:'An okonomiyaki made with pork and a fried egg (buta=pork, tama=egg).',context:'Butatama'},
+{term:'Tofuyaki',kana:'',cat:'DishStyle',short:'Tofu-based okonomiyaki',meaning:'A tofu-based version of okonomiyaki, in place of the usual meat or noodles.',context:'Tofuyaki'},
+{term:'Mayopon',kana:'',cat:'Sauce',short:'Mayo + ponzu blend',meaning:'A sauce blending creamy Kewpie mayonnaise with tangy citrus ponzu.',context:'Cheese Shiso Spring Rolls, sauce list'},
+{term:'Shio-Dare',kana:'',cat:'Sauce',short:'Clear salty seasoning sauce',meaning:'A clear, savory salt-based sauce, often lemon or garlic infused, used as a light seasoning.',context:'Sauce list: Shio-Dare Sauce'},
+{term:'Tarako',kana:'',cat:'Ingredient',short:'Salted pollock roe',meaning:'Salted, cured roe from pollock or cod, with a briny, savory pop.',context:'Tarako Fried Rice'},
+{term:'Soba Meshi',kana:'',cat:'DishStyle',short:'Fried rice + chopped noodles',meaning:'Fried rice mixed with chopped yakisoba noodles, cabbage, and yakisoba sauce.',context:'Soba Meshi'},
+{term:'Bento',kana:'',cat:'Format',short:'Single-portion boxed meal',meaning:'A single-portion boxed meal, traditionally with rice, a main, and sides.',context:'Tonkatsu Bento, Kushikatsu Bento, Fried Oyster Bento'},
+{term:'Kushikatsu',kana:'',cat:'DishStyle',short:'Deep-fried skewers',meaning:'Bite-sized meat, seafood, or vegetables skewered and deep-fried, usually panko-breaded.',context:'Kushikatsu Bento'},
+{term:'Teriyaki',kana:'',cat:'DishStyle',short:'Glazed sweet-soy grilling',meaning:'A cooking technique where food is glazed with a sweet soy sauce and grilled to a shine.',context:'Teriyaki Donburi, Yakitori (GF teriyaki)'},
+{term:'Miso',kana:'',cat:'Ingredient',short:'Fermented soybean paste',meaning:'A fermented soybean paste used as the base for soup, dressings, and marinades.',context:'Miso Soup, Broccoli Salad (miso vinaigrette)'},
+{term:'Wakame',kana:'',cat:'Ingredient',short:'Edible seaweed',meaning:'A mild, silky edible seaweed commonly used in salads and soups.',context:'Cucumber Wakame Salad'},
+{term:'Edamame',kana:'',cat:'Ingredient',short:'Boiled young soybeans',meaning:'Young soybeans, boiled or steamed in the pod and lightly salted.',context:'Edamame'},
+{term:'Yakitori',kana:'',cat:'DishStyle',short:'Grilled chicken skewers',meaning:'Bite-sized skewered chicken, grilled over a flame — literally "grilled bird."',context:'Yakitori'},
+{term:'Dashi',kana:'',cat:'Ingredient',short:'Japanese soup stock base',meaning:'A foundational Japanese soup stock, typically made from kelp and bonito flakes.',context:'Okonomiyaki batter, Miso Soup, Tsuyu broth'},
+{term:'Tamari',kana:'',cat:'Ingredient',short:'Often gluten-free soy sauce',meaning:'A darker, richer soy sauce that\'s traditionally brewed with little or no wheat.',context:'Gluten-Free fried rice dishes'}
+];
+
+const CATEGORIES = ["All","Ingredient","Sauce","DishStyle","Format"];
+const CATCOLORS = {
+  Ingredient: 0x6fcf9e,
+  Sauce: 0xff6f91,
+  DishStyle: 0xb98aeb,
+  Format: 0x7ec8e3,
+  All: 0xffa9cf
+};
+const FALLBACK_BG = 0xb98aeb;
+const BACK_BG = 0xc2447f;
+
+const STORAGE_KEY = "menuFlashcardsProgressV1";
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {known:[], quizBest:0}; }
+  catch(e){ return {known:[], quizBest:0}; }
+}
+function saveProgress(p){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }catch(e){}
+}
+
+/* ---------------------------------------------------------------
+   PIXI APP SETUP
+---------------------------------------------------------------- */
+const wrap = document.getElementById("canvas-wrap");
+const app = new PIXI.Application({
+  backgroundAlpha: 0,
+  antialias: true,
+  resolution: Math.min(window.devicePixelRatio||1, 2),
+  autoDensity: true
+});
+document.getElementById("loading").remove();
+wrap.appendChild(app.view);
+
+let SW = 0, SH = 0;
+function resize(){
+  const rect = wrap.getBoundingClientRect();
+  SW = Math.max(320, rect.width);
+  SH = Math.max(400, rect.height);
+  app.renderer.resize(SW, SH);
+  layout();
+}
+window.addEventListener("resize", resize);
+
+/* ---------------------------------------------------------------
+   BUTTON HELPER
+---------------------------------------------------------------- */
+function makeButton(label, {w=120,h=40,fill=0xff9dc4,textColor=0xffffff,fontSize=15,radius=10}={}){
+  const c = new PIXI.Container();
+  c.eventMode = "static";
+  c.cursor = "pointer";
+  const g = new PIXI.Graphics();
+  function draw(hover, active){
+    g.clear();
+    g.beginFill(active ? 0xff5fa2 : (hover ? 0xffc2dd : fill), 1);
+    g.lineStyle(2, 0xd94f89, 0.25);
+    g.drawRoundedRect(0,0,w,h,radius);
+    g.endFill();
+  }
+  draw(false,false);
+  c.addChild(g);
+  const t = new PIXI.Text(label, {fontFamily:"Segoe UI, sans-serif", fontSize, fill: textColor, fontWeight:"600"});
+  t.anchor.set(0.5);
+  t.position.set(w/2, h/2);
+  c.addChild(t);
+  c.w = w; c.h = h;
+  c.setLabel = (s)=>{ t.text = s; };
+  c.setActive = (a)=>{ draw(false,a); };
+  t.text = label;
+  c.onpointerover = ()=> draw(true,false);
+  c.onpointerout = ()=> draw(false,false);
+  return c;
+}
+
+/* ---------------------------------------------------------------
+   STATE
+---------------------------------------------------------------- */
+const progress = loadProgress();
+let state = {
+  mode: "flash", // flash | quiz
+  category: "All",
+  deck: [], // indices into CARDS
+  pos: 0,
+  flipped: false,
+  quizScore: 0,
+  quizAsked: 0,
+  quizChoiceLock: false
+};
+
+function buildDeck(){
+  state.deck = CARDS.map((c,i)=>i).filter(i=> state.category==="All" || CARDS[i].cat===state.category);
+  state.pos = 0;
+  state.flipped = false;
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+/* ---------------------------------------------------------------
+   LAYOUT CONTAINERS
+---------------------------------------------------------------- */
+const root = new PIXI.Container();
+app.stage.addChild(root);
+
+const topBar = new PIXI.Container();
+const cardLayer = new PIXI.Container();
+const bottomBar = new PIXI.Container();
+const statsText = new PIXI.Text("", {fontFamily:"Segoe UI, sans-serif", fontSize:14, fill:0x8a4d78});
+root.addChild(topBar, cardLayer, statsText, bottomBar);
+
+/* ---- category chips ---- */
+const chipButtons = [];
+CATEGORIES.forEach(cat=>{
+  const btn = makeButton(cat, {w: cat.length*9+34, h:32, fontSize:13, fill: CATCOLORS[cat] || 0xffa9cf});
+  btn.onpointertap = ()=>{
+    state.category = cat;
+    buildDeck();
+    chipButtons.forEach(b=> b.setActive(b.cat===state.category));
+    renderCard();
+    updateStats();
+  };
+  btn.cat = cat;
+  chipButtons.push(btn);
+  topBar.addChild(btn);
+});
+chipButtons[0].setActive(true);
+
+/* ---- mode toggle ---- */
+const flashModeBtn = makeButton("Flashcards", {w:150,h:34, fill:0xffb6d9});
+const quizModeBtn = makeButton("Quiz", {w:110,h:34, fill:0xffb6d9});
+flashModeBtn.onpointertap = ()=> switchMode("flash");
+quizModeBtn.onpointertap = ()=> switchMode("quiz");
+topBar.addChild(flashModeBtn, quizModeBtn);
+flashModeBtn.setActive(true);
+
+function switchMode(m){
+  state.mode = m;
+  flashModeBtn.setActive(m==="flash");
+  quizModeBtn.setActive(m==="quiz");
+  if(m==="quiz"){
+    state.quizScore=0; state.quizAsked=0;
+    shuffle(state.deck);
+    state.pos = 0;
+  }
+  state.flipped = false;
+  renderCard();
+  updateStats();
+}
+
+/* ---- bottom nav buttons ---- */
+const prevBtn = makeButton("◀ Prev", {w:100,h:42});
+const flipBtn = makeButton("Flip", {w:100,h:42, fill:0xff6fa8});
+const nextBtn = makeButton("Next ▶", {w:100,h:42});
+const knowBtn = makeButton("Know it ✓", {w:120,h:42, fill:0x8fe3b8});
+const studyBtn = makeButton("Study more", {w:130,h:42, fill:0xb98aeb});
+const shuffleBtn = makeButton("Shuffle", {w:110,h:42});
+[prevBtn,flipBtn,nextBtn,knowBtn,studyBtn,shuffleBtn].forEach(b=>bottomBar.addChild(b));
+
+prevBtn.onpointertap = ()=>{
+  if(state.deck.length===0) return;
+  state.pos = (state.pos-1+state.deck.length)%state.deck.length;
+  state.flipped=false;
+  renderCard();
+};
+nextBtn.onpointertap = ()=>{
+  if(state.deck.length===0) return;
+  state.pos = (state.pos+1)%state.deck.length;
+  state.flipped=false;
+  renderCard();
+};
+flipBtn.onpointertap = ()=> doFlip();
+shuffleBtn.onpointertap = ()=>{
+  shuffle(state.deck);
+  state.pos=0; state.flipped=false;
+  renderCard();
+};
+knowBtn.onpointertap = ()=>{
+  const term = CARDS[state.deck[state.pos]].term;
+  if(!progress.known.includes(term)){ progress.known.push(term); saveProgress(progress); }
+  advanceFlash();
+};
+studyBtn.onpointertap = ()=>{
+  const term = CARDS[state.deck[state.pos]].term;
+  progress.known = progress.known.filter(t=>t!==term);
+  saveProgress(progress);
+  advanceFlash();
+};
+function advanceFlash(){
+  if(state.deck.length===0) return;
+  state.pos = (state.pos+1)%state.deck.length;
+  state.flipped=false;
+  renderCard();
+  updateStats();
+}
+
+/* ---------------------------------------------------------------
+   FLASHCARD RENDERING
+---------------------------------------------------------------- */
+let cardContainer = new PIXI.Container();
+cardLayer.addChild(cardContainer);
+let quizAnswerButtons = [];
+let flipAnimating = false;
+
+function cardDims(){
+  const w = Math.min(420, SW*0.86);
+  const h = Math.min(300, SH*0.42);
+  return {w,h};
+}
+
+function drawCardFace(container, w, h, {bg, kicker, title, sub, body, footer}){
+  container.removeChildren();
+  const g = new PIXI.Graphics();
+  g.beginFill(bg, 1);
+  g.lineStyle(3, 0xffffff, 0.75);
+  g.drawRoundedRect(0,0,w,h,22);
+  g.endFill();
+  container.addChild(g);
+
+  if(kicker){
+    const k = new PIXI.Text(kicker, {fontFamily:"Segoe UI, sans-serif", fontSize:13, fill:0xfff5fa, fontWeight:"700", letterSpacing:1});
+    k.alpha = 0.9;
+    k.position.set(20, 16);
+    container.addChild(k);
+  }
+  if(title){
+    const t = new PIXI.Text(title, {fontFamily:"Segoe UI, sans-serif", fontSize:34, fill:0xffffff, fontWeight:"800", wordWrap:true, wordWrapWidth:w-40, align:"center"});
+    t.anchor.set(0.5, 0);
+    t.position.set(w/2, sub? 46 : 60);
+    container.addChild(t);
+  }
+  if(sub){
+    const s = new PIXI.Text(sub, {fontFamily:"Segoe UI, sans-serif", fontSize:18, fill:0xffe3f0, fontStyle:"italic"});
+    s.anchor.set(0.5,0);
+    s.position.set(w/2, 92);
+    container.addChild(s);
+  }
+  if(body){
+    const b = new PIXI.Text(body, {fontFamily:"Segoe UI, sans-serif", fontSize:16, fill:0xffffff, wordWrap:true, wordWrapWidth:w-48, align:"center", lineHeight:22});
+    b.anchor.set(0.5,0.5);
+    b.position.set(w/2, h*0.58);
+    container.addChild(b);
+  }
+  if(footer){
+    const f = new PIXI.Text(footer, {fontFamily:"Segoe UI, sans-serif", fontSize:12, fill:0xffe9f5, wordWrap:true, wordWrapWidth:w-40, align:"center"});
+    f.anchor.set(0.5,1);
+    f.position.set(w/2, h-14);
+    container.addChild(f);
+  }
+}
+
+function renderCard(){
+  quizAnswerButtons.forEach(b=>b.destroy());
+  quizAnswerButtons = [];
+  cardContainer.scale.x = 1;
+
+  if(state.deck.length===0){
+    drawCardFace(cardContainer, cardDims().w, cardDims().h, {bg:FALLBACK_BG, title:"No cards", body:"Try a different category filter."});
+    layout();
+    return;
+  }
+
+  const card = CARDS[state.deck[state.pos]];
+  const {w,h} = cardDims();
+  const known = progress.known.includes(card.term);
+
+  if(state.mode==="flash"){
+    if(!state.flipped){
+      drawCardFace(cardContainer, w, h, {
+        bg: CATCOLORS[card.cat] || FALLBACK_BG,
+        kicker: card.cat.toUpperCase() + (known ? " · known ✓" : ""),
+        title: card.term,
+        sub: card.kana || null,
+        footer: "Click card or press Flip to reveal meaning"
+      });
+    } else {
+      drawCardFace(cardContainer, w, h, {
+        bg: BACK_BG,
+        kicker: card.term.toUpperCase(),
+        body: card.meaning,
+        footer: "On the menu: " + card.context
+      });
+    }
+    knowBtn.visible = true;
+    studyBtn.visible = true;
+    flipBtn.visible = true;
+  } else {
+    // QUIZ MODE
+    drawCardFace(cardContainer, w, h, {
+      bg: CATCOLORS[card.cat] || FALLBACK_BG,
+      kicker: "WHAT DOES THIS MEAN? · " + card.cat.toUpperCase(),
+      title: card.term,
+      sub: card.kana || null
+    });
+    knowBtn.visible = false;
+    studyBtn.visible = false;
+    flipBtn.visible = false;
+
+    let opts = [card];
+    let pool = state.deck.map(i=>CARDS[i]).filter(c=>c.term!==card.term);
+    shuffle(pool);
+    opts = opts.concat(pool.slice(0,3));
+    shuffle(opts);
+
+    const btnW = Math.min(420, SW*0.86);
+    opts.forEach((opt, idx)=>{
+      const b = makeButton((idx+1)+". "+opt.short, {w:btnW, h:46, fontSize:14, fill:0xff9dc4, radius:10});
+      b.onpointertap = ()=> handleQuizAnswer(b, opt.term===card.term);
+      quizAnswerButtons.push(b);
+      cardLayer.addChild(b);
+    });
+    layout();
+  }
+}
+
+function handleQuizAnswer(btn, correct){
+  if(state.quizChoiceLock) return;
+  state.quizChoiceLock = true;
+  state.quizAsked++;
+  if(correct) state.quizScore++;
+  quizAnswerButtons.forEach(b=>{ b.eventMode = "none"; });
+  btn.children[0].clear();
+  btn.children[0].beginFill(correct ? 0x6fe6b0 : 0xff5c7a, 1);
+  btn.children[0].drawRoundedRect(0,0,btn.w,btn.h,10);
+  btn.children[0].endFill();
+  updateStats();
+  setTimeout(()=>{
+    state.quizChoiceLock = false;
+    if(state.quizScore > progress.quizBest){ progress.quizBest = state.quizScore; saveProgress(progress); }
+    state.pos = (state.pos+1)%state.deck.length;
+    renderCard();
+  }, 850);
+}
+
+function doFlip(){
+  if(state.mode!=="quiz" && !flipAnimating && state.deck.length>0){
+    flipAnimating = true;
+    const targetTime = 140;
+    let t=0;
+    const startScale = cardContainer.scale.x;
+    function step1(){
+      t += app.ticker.deltaMS;
+      const p = Math.min(1, t/targetTime);
+      cardContainer.scale.x = startScale*(1-p);
+      if(p<1){ requestAnimationFrame(step1); }
+      else{
+        state.flipped = !state.flipped;
+        renderCardFaceOnly();
+        t=0;
+        function step2(){
+          t += app.ticker.deltaMS;
+          const p2 = Math.min(1, t/targetTime);
+          cardContainer.scale.x = p2;
+          if(p2<1){ requestAnimationFrame(step2); }
+          else{ flipAnimating=false; }
+        }
+        requestAnimationFrame(step2);
+      }
+    }
+    requestAnimationFrame(step1);
+  }
+}
+
+function renderCardFaceOnly(){
+  const card = CARDS[state.deck[state.pos]];
+  const {w,h} = cardDims();
+  const known = progress.known.includes(card.term);
+  if(!state.flipped){
+    drawCardFace(cardContainer, w, h, {
+      bg: CATCOLORS[card.cat] || FALLBACK_BG,
+      kicker: card.cat.toUpperCase() + (known ? " · known ✓" : ""),
+      title: card.term,
+      sub: card.kana || null,
+      footer: "Click card or press Flip to reveal meaning"
+    });
+  } else {
+    drawCardFace(cardContainer, w, h, {
+      bg: BACK_BG,
+      kicker: card.term.toUpperCase(),
+      body: card.meaning,
+      footer: "On the menu: " + card.context
+    });
+  }
+}
+cardContainer.eventMode = "static";
+cardContainer.cursor = "pointer";
+cardContainer.onpointertap = ()=>{ if(state.mode==="flash") doFlip(); };
+
+/* ---------------------------------------------------------------
+   STATS
+---------------------------------------------------------------- */
+function updateStats(){
+  if(state.deck.length===0){ statsText.text=""; return; }
+  const knownCount = CARDS.filter(c=> (state.category==="All"||c.cat===state.category) && progress.known.includes(c.term)).length;
+  const total = state.deck.length;
+  if(state.mode==="flash"){
+    statsText.text = `Card ${state.pos+1}/${total}   ·   Known ${knownCount}/${total}   ·   ${state.category}`;
+  } else {
+    statsText.text = `Quiz Score ${state.quizScore}/${state.quizAsked}   ·   Best ${progress.quizBest}   ·   ${state.category}`;
+  }
+  statsText.style.wordWrap = true;
+}
+
+/* ---------------------------------------------------------------
+   LAYOUT
+---------------------------------------------------------------- */
+function layout(){
+  const {w:cw,h:ch} = cardDims();
+
+  // top bar: wrap chips + mode buttons, centered
+  const allTop = [...chipButtons];
+  const gap = 8;
+  const maxW = SW - 20;
+  const rows = [];
+  let row = []; let rowWidth = 0;
+  allTop.forEach(b=>{
+    if(rowWidth + b.w + gap > maxW){ rows.push(row); row=[]; rowWidth=0; }
+    row.push(b); rowWidth += b.w+gap;
+  });
+  if(row.length) rows.push(row);
+
+  let yCursor = 0;
+  rows.forEach(r=>{
+    let totalW = r.reduce((s,b)=>s+b.w,0) + gap*(r.length-1);
+    let xCursor = SW/2 - totalW/2;
+    r.forEach(b=>{ b.position.set(xCursor, yCursor); xCursor += b.w+gap; });
+    yCursor += 40;
+  });
+
+  const modeRowW = flashModeBtn.w + quizModeBtn.w + gap;
+  flashModeBtn.position.set(SW/2 - modeRowW/2, yCursor+6);
+  quizModeBtn.position.set(SW/2 - modeRowW/2 + flashModeBtn.w+gap, yCursor+6);
+  const topBarHeight = yCursor + 46;
+  topBar.position.set(0,10);
+
+  // card centered below top bar, above stats/bottom bar
+  const cardTop = topBarHeight + 20;
+  cardContainer.position.set(SW/2-cw/2, cardTop);
+
+  // quiz answer buttons stacked under card
+  quizAnswerButtons.forEach((b,i)=>{
+    b.position.set(SW/2-cw/2, cardTop+ch+14+i*54);
+  });
+
+  const bottomOfCardArea = state.mode==="quiz" ? (cardTop+ch+14+quizAnswerButtons.length*54+10) : (cardTop+ch+20);
+  statsText.position.set(SW/2 - statsText.width/2, bottomOfCardArea);
+
+  // bottom nav
+  const bGap = 10;
+  let bottomButtons = state.mode==="flash" ? [prevBtn, studyBtn, flipBtn, knowBtn, nextBtn, shuffleBtn] : [prevBtn, nextBtn, shuffleBtn];
+  prevBtn.visible = true; nextBtn.visible = true; shuffleBtn.visible = true;
+  knowBtn.visible = state.mode==="flash";
+  studyBtn.visible = state.mode==="flash";
+  flipBtn.visible = state.mode==="flash";
+
+  let totalBW = bottomButtons.reduce((s,b)=>s+b.w,0) + bGap*(bottomButtons.length-1);
+  let bx = SW/2 - totalBW/2;
+  const by = SH - 56;
+  bottomButtons.forEach(b=>{ b.position.set(bx, by); bx += b.w+bGap; });
+}
+
+/* ---------------------------------------------------------------
+   KEYBOARD
+---------------------------------------------------------------- */
+window.addEventListener("keydown", (e)=>{
+  if(e.code==="Space"){
+    e.preventDefault();
+    if(state.mode==="flash") doFlip();
+  } else if(e.code==="ArrowRight"){
+    nextBtn.emit("pointertap");
+  } else if(e.code==="ArrowLeft"){
+    prevBtn.emit("pointertap");
+  } else if(state.mode==="quiz" && ["1","2","3","4"].includes(e.key)){
+    const idx = parseInt(e.key,10)-1;
+    if(quizAnswerButtons[idx]) quizAnswerButtons[idx].emit("pointertap");
+  }
+});
+
+/* ---------------------------------------------------------------
+   INIT
+---------------------------------------------------------------- */
+buildDeck();
+shuffle(state.deck);
+resize();
+renderCard();
+updateStats();
+</script>
+</body>
+</html>
